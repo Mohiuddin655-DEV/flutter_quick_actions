@@ -1,87 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:quick_actions/quick_actions.dart';
+import 'package:flutter_quick_actions/quick_actions.dart';
 
-// First, add the quick_actions package to pubspec.yaml
-// dependencies:
-//   quick_actions: ^1.0.5
-
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await InAppQuickActions.init();
+  runApp(const App());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final QuickActions quickActions = const QuickActions();
-  String shortcutItem = 'no action set';
-
-  @override
-  void initState() {
-    super.initState();
-    initializeQuickActions();
-  }
-
-  void initializeQuickActions() {
-    quickActions.initialize((shortcutType) {
-      // Handle quick action selection here
-      setState(() {
-        shortcutItem = shortcutType;
-      });
-
-      // Navigate based on the action selected
-      switch (shortcutType) {
-        case 'action_search':
-          Navigator.pushNamed(context, '/search');
-          break;
-        case 'action_new_item':
-          Navigator.pushNamed(context, '/new');
-          break;
-        case 'action_messages':
-          Navigator.pushNamed(context, '/messages');
-          break;
-      }
-    });
-
-    quickActions.setShortcutItems(<ShortcutItem>[
-      const ShortcutItem(
-        type: 'action_search',
-        localizedTitle: 'Search',
-        icon: 'search', // Icon file name in Android/iOS project
-      ),
-      const ShortcutItem(
-        type: 'action_new_item',
-        localizedTitle: 'New Item',
-        icon: 'add',
-      ),
-      const ShortcutItem(
-        type: 'action_messages',
-        localizedTitle: 'Messages',
-        icon: 'message',
-      ),
-    ]);
-  }
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Quick Actions Demo'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Last Quick Action: $shortcutItem'),
-              // Your app content here
-            ],
-          ),
-        ),
+      title: 'Quick Actions',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const Home(),
+    );
+  }
+}
+
+class Home extends StatelessWidget {
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Quick Actions"),
+      ),
+      body: ListenableBuilder(
+        listenable: InAppQuickActions.i,
+        builder: (context, child) {
+          final loading = InAppQuickActions.i.loading;
+          final shortcut = InAppQuickActions.i.shortcut;
+          return Center(
+            child: loading
+                ? CircularProgressIndicator()
+                : Padding(
+                    padding: const EdgeInsets.all(50),
+                    child: Text(
+                      shortcut ?? "No shortcut selected",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+          );
+        },
       ),
     );
   }
